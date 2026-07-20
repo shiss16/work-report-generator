@@ -1,4 +1,7 @@
-# 输入数据结构
+# ⚠️ 已废弃 — 输入数据结构
+
+> 2026-07-20：work-report-generator 已重构为从 SQLite 读取数据。
+> 请参见 `work_item_schema.md` 了解当前的 WorkItem 数据模型。
 
 `work-report-generator` 接受的 JSON 输入格式。与 `lark-meeting-fetcher` 的输出格式一致。
 

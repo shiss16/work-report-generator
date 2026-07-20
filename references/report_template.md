@@ -1,4 +1,7 @@
-# 报告模板
+# ⚠️ 已废弃 — 报告模板
+
+> 2026-07-20：已拆分为 `daily_template.md` 和 `weekly_template.md`。
+> 渲染逻辑已移至 `scripts/render/daily.py` 和 `scripts/render/weekly.py`。
 
 ## 多日周报模板
 
