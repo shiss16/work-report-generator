@@ -9,11 +9,18 @@
 import os
 import sys
 from datetime import date, timedelta
-from scripts.config import load_config, get_db_path, get_output_dir
+from scripts.config import load_config, get_db_path, get_output_dir, get_obsidian_vault_path
 from scripts.assemble import assemble_daily, assemble_weekly
 from scripts.render.daily import DailyRenderer
 from scripts.render.weekly import WeeklyRenderer
 from scripts.render.markdown_output import save_to_local
+from scripts.render.obsidian_output import save_daily_to_obsidian, save_weekly_to_obsidian
+
+
+def _has_obsidian_output(config: dict, mode: str) -> bool:
+    """检查配置中是否包含 obsidian_vault 输出渠道"""
+    outputs = config.get("outputs", {}).get(mode, [])
+    return any(o.get("type") == "obsidian_vault" for o in outputs)
 
 
 def run(workspace: str, mode: str, confirm: bool = False):
@@ -29,6 +36,11 @@ def run(workspace: str, mode: str, confirm: bool = False):
 
         output_path = os.path.join(output_dir, f"{target_date}.md")
         save_to_local(md, output_path)
+
+        if _has_obsidian_output(config, "daily"):
+            vault_path = get_obsidian_vault_path(workspace)
+            save_daily_to_obsidian(vault_path, report, md)
+
         return {"report": report, "markdown": md, "output_path": output_path}
 
     elif mode == "weekly":
@@ -43,6 +55,11 @@ def run(workspace: str, mode: str, confirm: bool = False):
 
         output_path = os.path.join(output_dir, f"weekly_{start_date}_{end_date}.md")
         save_to_local(md, output_path)
+
+        if _has_obsidian_output(config, "weekly"):
+            vault_path = get_obsidian_vault_path(workspace)
+            save_weekly_to_obsidian(vault_path, report, md)
+
         return {
             "report": report, "markdown": md, "output_path": output_path,
             "confirmed": confirm,

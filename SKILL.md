@@ -23,6 +23,12 @@ config.yaml (project-level: .workbuddy/data/config.yaml)
 │  work-report-generator (user-level skill)             │
 │                                                       │
 │  SQLite DB ──→ Query ──→ Assemble ──→ Render ──→ 输出 │
+│                                          │            │
+│                                          ├─ local_md  │
+│                                          ├─ feishu    │
+│                                          └─ obsidian  │
+│                                              ↓        │
+│                                       obsidian-vault/ │
 │                                                       │
 │  数据源（外部）写 WorkItem 行 ──→ SQLite work_items 表 │
 └──────────────────────────────────────────────────────┘
@@ -71,7 +77,8 @@ python scripts/run.py weekly --confirm
   │           └── save_to_local() → 写入 reports/YYYY-MM-DD.md
   ├── Step 4: 按 config.outputs.daily 输出
   │           ├── local_md → 已保存
-  │           └── feishu_msg → 调用 lark-im skill 发送飞书消息
+  │           ├── feishu_msg → 调用 lark-im skill 发送飞书消息
+  │           └── obsidian_vault → 写入 obsidian-vault/日报/YYYY-MM-DD.md
   └── 完成
 ```
 
@@ -83,7 +90,8 @@ python scripts/run.py weekly --confirm
   ├── Step 1-3: 同日报，模式为 weekly
   ├── Step 4: 按 config.outputs.weekly 输出
   │           ├── local_md → 已保存
-  │           └── feishu_msg → 调用 lark-im skill 发送飞书消息（预览）
+  │           ├── feishu_msg → 调用 lark-im skill 发送飞书消息（预览）
+  │           └── obsidian_vault → 写入 obsidian-vault/周报/YYYY-Www.md
   ├── Step 5: 等待用户确认
   │           ├── 用户说"确认" → 发布飞书文档（调用 lark-doc skill）
   │           └── 未确认 → 仅本地存档
@@ -102,7 +110,8 @@ python scripts/run.py weekly --confirm
   │           └── 将 LLM 产出的 threads 传入 assemble_weekly(threads=...)
   ├── Step 4: 按 config.outputs.weekly 输出
   │           ├── local_md → 已保存
-  │           └── feishu_msg → 调用 lark-im skill 发送飞书消息（预览）
+  │           ├── feishu_msg → 调用 lark-im skill 发送飞书消息（预览）
+  │           └── obsidian_vault → 写入 obsidian-vault/周报/YYYY-Www.md
   ├── Step 5: 等待用户确认
   │           ├── 用户说"确认" → 发布飞书文档（调用 lark-doc skill）
   │           └── 未确认 → 仅本地存档
@@ -119,22 +128,28 @@ data_sources:
   tasks: lark_task
   calendar: lark_calendar
   meetings: lark_vc
+  chats: lark_im
+  docs: lark_doc
 
 # 输出渠道
 outputs:
   daily:
     - type: feishu_msg
     - type: local_md
+    - type: obsidian_vault    # 输出到 Obsidian 知识库
   weekly:
     - type: feishu_msg
     - type: local_md
-    - type: feishu_doc   # 确认后发布
+    - type: feishu_doc
+    - type: obsidian_vault    # 输出到 Obsidian 知识库
 
 # 渠道配置
 channels:
   feishu:
     msg_target: self
     doc_folder: ""
+  obsidian:
+    vault_path: obsidian-vault  # 相对于 workspace 的路径，默认 obsidian-vault
 
 # 报告偏好
 report:
@@ -151,6 +166,8 @@ report:
 ## 数据集成
 
 work-report-generator 只读不写。数据源独立写入 SQLite，唯一契约是符合 WorkItem Schema。
+
+支持的数据类型：`task`、`meeting`、`chat`、`doc`。所有类型特有字段存储在 `extra` JSON 列中。
 
 ### 接入新数据源
 

@@ -14,11 +14,13 @@ DEFAULT_CONFIG = {
         "daily": [
             {"type": "feishu_msg"},
             {"type": "local_md"},
+            {"type": "obsidian_vault"},
         ],
         "weekly": [
             {"type": "feishu_msg"},
             {"type": "local_md"},
             {"type": "feishu_doc"},
+            {"type": "obsidian_vault"},
         ],
     },
     "channels": {
@@ -101,3 +103,16 @@ def get_db_path(workspace_path: str) -> str:
 def get_output_dir(workspace_path: str) -> str:
     """获取输出目录"""
     return os.path.join(workspace_path, ".workbuddy", "data", "reports")
+
+
+def get_obsidian_vault_path(workspace_path: str) -> str:
+    """获取 Obsidian vault 路径
+
+    从 config.yaml 的 channels.obsidian.vault_path 读取，
+    默认值为 workspace_path/obsidian-vault
+    """
+    config = load_config(workspace_path)
+    channels = config.get("channels", {})
+    obsidian_cfg = channels.get("obsidian", {})
+    vault_rel = obsidian_cfg.get("vault_path", "obsidian-vault")
+    return os.path.join(workspace_path, vault_rel)

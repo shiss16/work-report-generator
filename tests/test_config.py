@@ -4,7 +4,7 @@ import os
 import tempfile
 import pytest
 import yaml
-from scripts.config import load_config, validate_config, get_db_path, get_output_dir
+from scripts.config import load_config, validate_config, get_db_path, get_output_dir, get_obsidian_vault_path
 
 
 @pytest.fixture
@@ -48,6 +48,31 @@ class TestLoadConfig:
         """返回正确的输出目录"""
         path = get_output_dir(workspace_dir)
         expected = os.path.join(workspace_dir, ".workbuddy", "data", "reports")
+        assert path == expected
+
+    def test_get_obsidian_vault_path_default(self, workspace_dir):
+        """返回默认 vault 路径"""
+        path = get_obsidian_vault_path(workspace_dir)
+        expected = os.path.join(workspace_dir, "obsidian-vault")
+        assert path == expected
+
+    def test_get_obsidian_vault_path_from_config(self, workspace_dir):
+        """从 config 读取自定义 vault 路径"""
+        config_path = os.path.join(workspace_dir, ".workbuddy", "data", "config.yaml")
+        os.makedirs(os.path.dirname(config_path), exist_ok=True)
+        with open(config_path, "w", encoding="utf-8") as f:
+            yaml.dump({
+                "outputs": {"daily": [{"type": "local_md"}]},
+                "report": {"daily": {}},
+                "channels": {
+                    "obsidian": {
+                        "vault_path": "my-vault"
+                    }
+                },
+            }, f)
+
+        path = get_obsidian_vault_path(workspace_dir)
+        expected = os.path.join(workspace_dir, "my-vault")
         assert path == expected
 
 

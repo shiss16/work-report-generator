@@ -43,7 +43,9 @@ class WeeklyRenderer:
             if day.get("meetings"):
                 for m in day["meetings"]:
                     status_icon = _status_icon(m.get("fetch_status", ""))
-                    time_range = f"{m.get('start_time', '')}-{m.get('end_time', '')}"
+                    start = m.get('start_time', '')
+                    end = m.get('end_time', '')
+                    time_range = f"{start.split(' ')[-1][:5]}-{end.split(' ')[-1][:5]}"
                     lines.append(f"**{m['title']}** {status_icon}")
                     lines.append(f"  > {time_range}")
                     if m.get("ai_summary"):
